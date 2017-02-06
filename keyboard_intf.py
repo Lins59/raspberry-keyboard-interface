@@ -40,18 +40,27 @@ GPIO.setmode(GPIO.BCM)
 #  5 rows
 rows = [2,3,4,17,27]
 
-# 9 columns
-columns = [22,10,14,15,18,23,24,25,8]
+# 10 columns
+columns = [22,10,14,15,18,23,24,25,8,7]
+
+# list keys
+keys = {}
+keys[2] = {22:'1', 10:'2', 14:'3', 15:'4', 18:'5', 23:'6', 24:'7', 25:'8', 8:'9', 7:'0'}
+keys[3] = {22:'a', 10:'z', 14:'e', 15:'r', 18:'t', 23:'y', 24:'u', 25:'i', 8:'o', 7:'p'}
+keys[4] = {22:'q', 10:'s', 14:'d', 15:'f', 18:'g', 23:'h', 24:'j', 25:'k', 8:'l', 7:'m'}
+keys[17] = {22:'w', 10:'x', 14:'c', 15:'v', 18:'b', 23:'n', 24:',', 25:';', 8:':', 7:'!'}
+keys[27] = {22:'a', 10:'z', 14:'e', 15:'r', 18:'t', 23:'y', 24:'u', 25:'i', 8:'o', 7:'p'}
 
 current_row = 0
 
 def trigger_input(column):
+    global keys
     global current_row
     print "Input triggered from row: %s and column: %s" % (current_row, column)
-    keyboard.write("azerty")
+    keyboard.write(keys[current_row][column])
 
 # INIT
-# 5 rows x 9 columns = 45 keys matrix
+# 5 rows x 10 columns = 50 keys matrix
 
 # Columns are output
 for row in rows:
