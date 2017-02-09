@@ -108,11 +108,14 @@ for index, row in enumerate(rows):
         elif current_chars == "CAPS":
             lower_char = "caps lock"
             upper_char = "caps lock"
+        elif current_chars == "SPACE":
+            lower_char = " "
+            upper_char = " "
         elif current_chars == "BACK_SPACE":
             lower_char = "backspace"
             upper_char = "backspace"
 
-        matrix[row][column] = {"lower": ower_char, "upper": upper_char}
+        matrix[row][column] = {"lower": lower_char, "upper": upper_char}
         keys[lower_char] = {"row": row, "column": column}
         if not is_letter:
             keys[upper_char] = {"row": row, "column": column}
@@ -124,26 +127,33 @@ current_row = 0
 shift = False
 
 def trigger_input(column):
+    global keys
     global matrix
     global current_row
     global shift
+    
+    value = GPIO.input(column)
+    
+    # Special shift key
+    if column == keys["shift"]["column"] and current_row == keys["shift"]["row"]:
+        shift = value
+        return
+
     try:
-        current_key = matrix[current_row][column]
-        # Special shift key
-        if current_key == "shift":
-            shift = True
-            return
+        # Manual debounce
+        if value: 
+            current_key = matrix[current_row][column]
             
-        # Normal key
-        if not shift:
-            keyboard.write(current_key["lower"])
-        else:
-            keyboard.write(current_key["upper"])
+            # Normal key
+            if not shift:
+                keyboard.write(current_key["lower"])
+            else:
+                keyboard.write(current_key["upper"])
     except:
         print "Unexpected key %s, %s", current_row, column
 
 def trigger_shift_input(column):
-    global keys
+
     global current_row
     global shift
     
@@ -160,11 +170,12 @@ for row in rows:
 # Columns are input with pull-up
 for column in columns:
     GPIO.setup(column, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-    GPIO.add_event_detect(column, GPIO.RISING, callback=trigger_input, bouncetime=100)
     
-    # Falling edge for shift
+    # Both edges (RISING/FALLING) for shift
     if column == keys["shift"]["column"]:
-        GPIO.add_event_detect(column, GPIO.FALLING, callback=trigger_shift_input, bouncetime=100)
+        GPIO.add_event_detect(column, GPIO.BOTH, callback=trigger_input, bouncetime=100)
+    else:
+        GPIO.add_event_detect(column, GPIO.RISING, callback=trigger_input, bouncetime=100)
 
 try:
     while True:
