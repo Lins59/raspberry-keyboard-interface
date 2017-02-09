@@ -66,7 +66,10 @@ for index, row in enumerate(rows):
   
   for indexColumn, column in enumerate(columns):
     current_chars = split_chars[indexColumn]
-    lower_char, upper_char
+    
+    lower_char = ''
+    upper_char = ''
+    
     if '|' in current_chars:
       # First char = "lower" case
       # Second char = "upper" case
