@@ -54,7 +54,7 @@ keymap.append("SHIFT SPACE CAPS BACK_SPACE")
 if len(keymap) != len(rows):
   raise Exception('Keymap length differs from rows length')
 
-keys = [[x for x in range(rows)] for y in range(columns)]
+keys = [[x for x in range(len(rows))] for y in range(len(columns))]
 for index, row in enumerate(rows):
   current_keymap_row = keymap[index]
   
