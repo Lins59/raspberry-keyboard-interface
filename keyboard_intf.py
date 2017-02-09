@@ -37,10 +37,10 @@ GPIO.setmode(GPIO.BCM)
 # | BCM | wPi |   Name  | Mode | V | Physical | V | Mode | Name    | wPi | BCM |
 # +-----+-----+---------+------+---+---Pi 3---+---+------+---------+-----+-----+
 
-#  5 rows
+#  5 rows => OUTPUT
 rows = [2,3,4,17,27]
 
-# 12 columns
+# 12 columns => INPUT
 columns = [22,10,9,11,14,15,18,23,24,25,8,7]
 
 # list keys
@@ -54,7 +54,7 @@ keymap.append("SHIFT SPACE CAPS BACK_SPACE")
 if len(keymap) != len(rows):
   raise Exception('Keymap length differs from rows length')
 
-keys = []
+keys = [[x for x in range(rows)] for y in range(columns)]
 for index, row in enumerate(rows):
   current_keymap_row = keymap[index]
   
@@ -107,11 +107,11 @@ def trigger_input(column):
 # INIT
 # 5 rows x 12 columns = 60 keys matrix
 
-# Columns are output
+# Rows are output
 for row in rows:
     GPIO.setup(row, GPIO.OUT)
 
-# Rows are input with pull-up
+# Columns are input with pull-up
 for column in columns:
     GPIO.setup(column, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
     GPIO.add_event_detect(column, GPIO.RISING, callback=trigger_input, bouncetime=100)
