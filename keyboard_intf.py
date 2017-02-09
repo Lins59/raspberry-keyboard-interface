@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import RPi.GPIO as GPIO
 from time import sleep
+from collections import defaultdict
 import keyboard
 
 GPIO.setmode(GPIO.BCM)
@@ -54,7 +55,7 @@ keymap.append("SHIFT SPACE CAPS BACK_SPACE")
 if len(keymap) != len(rows):
   raise Exception('Keymap length differs from rows length')
 
-keys = [[x for x in range(len(rows))] for y in range(len(columns))]
+keys = defaultdict(dict)
 for index, row in enumerate(rows):
   current_keymap_row = keymap[index]
   
@@ -65,34 +66,37 @@ for index, row in enumerate(rows):
     raise Exception('Keymap row is greater than column length')
   
   for indexColumn, column in enumerate(columns):
+    if indexColumn >= len(split_chars):
+      continue
     current_chars = split_chars[indexColumn]
     
-    lower_char = ''
-    upper_char = ''
+    lower_char = ""
+    upper_char = ""
     
     if '|' in current_chars:
       # First char = "lower" case
       # Second char = "upper" case
-      (lower_char, upper_char) = current_chars.split('|')
-    elif len(current_chars) == 0:
+      lower_char, upper_char = current_chars.split('|')
+    elif len(current_chars) == 1:
       lower_char = current_chars
       upper_char = current_chars.upper()
     # Specials chars
     elif current_chars == "ACCENT":
-      lower_char = '^'
-      upper_char = '¨'
+      lower_char = "^"
+      upper_char = "¨"
     elif current_chars == "SHIFT":
-      lower_char = 'shift'
-      upper_char = 'shift'
+      lower_char = "shift"
+      upper_char = "shift"
     elif current_chars == "CAPS":
-      lower_char = 'caps lock'
-      upper_char = 'caps lock'
+      lower_char = "caps lock"
+      upper_char = "caps lock"
     elif current_chars == "BACK_SPACE":
-      lower_char = 'backspace'
-      upper_char = 'backspace'
+      lower_char = "backspace"
+      upper_char = "backspace"
     
-    keys[row][column]['lower'] = lower_char
-    keys[row][column]['upper'] = upper_char
+    keys[row][column] = {}
+    keys[row][column]["lower"] = lower_char
+    keys[row][column]["upper"] = upper_char
 
 print keys
 
