@@ -51,7 +51,7 @@ keymap.append("q s d f g h j k l m ù|%")
 keymap.append("w x c v b n ,|? ;|. :|/ !|§")
 keymap.append("SHIFT SPACE CAPS BACK_SPACE")
 
-if keymap.length != rows.length:
+if len(keymap) != len(length):
   raise Exception('Keymap length differs from rows length')
 
 keys = []
@@ -61,7 +61,7 @@ for index, row in enumerate(rows):
   # Split on space
   split_chars = current_keymap_row.split(' ')
   
-  if split_chars.length > columns.length:
+  if len(split_chars) > len(columns):
     raise Exception('Keymap row is greater than column length')
   
   for indexColumn, column in enumerate(columns):
