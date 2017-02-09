@@ -51,7 +51,7 @@ keymap.append("q s d f g h j k l m ù|%")
 keymap.append("w x c v b n ,|? ;|. :|/ !|§")
 keymap.append("SHIFT SPACE CAPS BACK_SPACE")
 
-if len(keymap) != len(length):
+if len(keymap) != len(rows):
   raise Exception('Keymap length differs from rows length')
 
 keys = []
