@@ -46,67 +46,109 @@ columns = [22,10,9,11,14,15,18,23,24,25,8,7]
 
 # list keys
 keymap = []
+# Row 2
 keymap.append("$|1 é|2 \"|3 '|4 (|5 -|6 è|7 _|8 ç|9 à|& =|+ )|°")
+# Row 3
 keymap.append("a z e r t y u i o p ACCENT")
+# Row 4
 keymap.append("q s d f g h j k l m ù|%")
+# Row 17
 keymap.append("w x c v b n ,|? ;|. :|/ !|§")
+# Row 27
 keymap.append("SHIFT SPACE CAPS BACK_SPACE")
 
 if len(keymap) != len(rows):
-  raise Exception('Keymap length differs from rows length')
+    raise Exception('Keymap length differs from rows length')
+
 
 keys = defaultdict(dict)
-for index, row in enumerate(rows):
-  current_keymap_row = keymap[index]
-  
-  # Split on space
-  split_chars = current_keymap_row.split(' ')
-  
-  if len(split_chars) > len(columns):
-    raise Exception('Keymap row is greater than column length')
-  
-  for indexColumn, column in enumerate(columns):
-    if indexColumn >= len(split_chars):
-      continue
-    current_chars = split_chars[indexColumn]
-    
-    lower_char = ""
-    upper_char = ""
-    
-    if '|' in current_chars:
-      # First char = "lower" case
-      # Second char = "upper" case
-      lower_char, upper_char = current_chars.split('|')
-    elif len(current_chars) == 1:
-      lower_char = current_chars
-      upper_char = current_chars.upper()
-    # Specials chars
-    elif current_chars == "ACCENT":
-      lower_char = "^"
-      upper_char = "¨"
-    elif current_chars == "SHIFT":
-      lower_char = "shift"
-      upper_char = "shift"
-    elif current_chars == "CAPS":
-      lower_char = "caps lock"
-      upper_char = "caps lock"
-    elif current_chars == "BACK_SPACE":
-      lower_char = "backspace"
-      upper_char = "backspace"
-    
-    keys[row][column] = {}
-    keys[row][column]["lower"] = lower_char
-    keys[row][column]["upper"] = upper_char
+matrix = defaultdict(dict)
 
+# This will be used to determine GPIO.FALLING event
+shift_key = {}
+
+# Iterates to get usable keymap
+for index, row in enumerate(rows):
+    current_keymap_row = keymap[index]
+  
+    # Split on space
+    split_chars = current_keymap_row.split(' ')
+
+    if len(split_chars) > len(columns):
+        raise Exception('Keymap row is greater than column length')
+
+    for indexColumn, column in enumerate(columns):
+        # Avoid KeyError
+        if indexColumn >= len(split_chars):
+            continue
+        
+        current_chars = split_chars[indexColumn]
+
+        lower_char = ""
+        upper_char = ""
+
+        is_letter = False
+        
+        if '|' in current_chars:
+            # First char = "lower" case
+            # Second char = "upper" case
+            lower_char, upper_char = current_chars.split('|')
+        elif len(current_chars) == 1:
+            lower_char = current_chars
+            upper_char = current_chars.upper()
+            is_letter = True
+        
+        # Specials chars
+        elif current_chars == "ACCENT":
+            lower_char = "^"
+            upper_char = "¨"
+        elif current_chars == "SHIFT":
+            lower_char = "shift"
+            upper_char = "shift"
+        elif current_chars == "CAPS":
+            lower_char = "caps lock"
+            upper_char = "caps lock"
+        elif current_chars == "BACK_SPACE":
+            lower_char = "backspace"
+            upper_char = "backspace"
+
+        matrix[row][column] = {"lower": ower_char, "upper": upper_char}
+        keys[lower_char] = {"row": row, "column": column}
+        if not is_letter:
+            keys[upper_char] = {"row": row, "column": column}
+
+print matrix
 print keys
 
 current_row = 0
+shift = False
 
 def trigger_input(column):
+    global matrix
+    global current_row
+    global shift
+    try:
+        current_key = matrix[current_row][column]
+        # Special shift key
+        if current_key == "shift":
+            shift = True
+            return
+            
+        # Normal key
+        if not shift:
+            keyboard.write(current_key["lower"])
+        else:
+            keyboard.write(current_key["upper"])
+    except:
+        print "Unexpected key %s, %s", current_row, column
+
+def trigger_shift_input(column):
     global keys
     global current_row
-    print "Input triggered from row: %s and column: %s" % (current_row, column)
-    keyboard.write(keys[current_row][column])
+    global shift
+    
+    if column == keys["shift"]["column"] and current_row == keys["shift"]["row"]:
+        shift = False
 
 # INIT
 # 5 rows x 12 columns = 60 keys matrix
@@ -119,6 +161,10 @@ for row in rows:
 for column in columns:
     GPIO.setup(column, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
     GPIO.add_event_detect(column, GPIO.RISING, callback=trigger_input, bouncetime=100)
+    
+    # Falling edge for shift
+    if column == keys["shift"]["column"]:
+        GPIO.add_event_detect(column, GPIO.FALLING, callback=trigger_shift_input, bouncetime=100)
 
 try:
     while True:
@@ -127,6 +173,7 @@ try:
             GPIO.output(row, 1)
             current_row = row
             print current_row
+            
             # Sleep 100 ms
             sleep(0.1)
 
